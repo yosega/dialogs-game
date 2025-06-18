@@ -3,113 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Игра Диалоги</title>
+    <title>Игра в диалоги</title>
+    
+    <!-- Подключаем Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Подключаем React и ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Подключаем Babel для обработки JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
     <style>
         body {
-            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .card {
+            max-width: 800px;
+            margin: 0 auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .text-display {
+            min-height: 150px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f4f4f4;
+            justify-content: center;
+            padding: 20px;
         }
-
-        #logo {
-            margin-bottom: 20px;
-        }
-
-        #previous-question {
-            font-size: 14px;
-            color: gray;
-            margin-bottom: 10px;
-        }
-
-        #current-question {
-            font-size: 24px;
+        .current-text {
+            font-size: 1.5rem;
             margin-bottom: 20px;
             text-align: center;
         }
-
-        #question-button {
-            padding: 10px 40px;
-            font-size: 18px;
-            cursor: pointer;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            margin: 5px;
-        }
-
-        #question-button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-
-        #reset-button {
-            padding: 10px 20px;
-            font-size: 18px;
-            cursor: pointer;
-            background-color: gray;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            margin: 5px;
-        }
-
-        #reset-button:hover {
-            background-color: darkgray;
-        }
-
-        #confirmation {
-            display: none;
+        .previous-text {
+            font-size: 1rem;
+            color: #6c757d;
             text-align: center;
+            border-top: 1px dashed #dee2e6;
+            padding-top: 15px;
+            width: 100%;
         }
-
-        #confirmation button {
-            padding: 10px 20px;
-            font-size: 16px;
-            margin: 5px;
-            cursor: pointer;
-            border-radius: 5px;
-            border: none;
+        .btn-container {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
         }
-
-        #confirm-yes {
-            background-color: #28a745;
-            color: white;
+        .history-item, .favorite-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
         }
-
-        #confirm-no {
-            background-color: #dc3545;
-            color: white;
+        .history-title {
+            font-weight: bold;
+        }
+        .btn-category {
+            position: relative;
+        }
+        .btn-category .badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
         }
     </style>
 </head>
 <body>
-    <img id="logo" src="logo.png" alt="Логотип" width="100">
-    <div id="previous-question">Здесь будет отображаться предыдущий вопрос</div>
-    <div id="current-question">Нажмите кнопку, чтобы получить вопрос</div>
-    <button id="question-button">Вопрос</button>
-    <button id="reset-button">Сброс</button>
-
-    <div id="confirmation">
-        <p>Вы уверены, что хотите сбросить игру?</p>
-        <button id="confirm-yes">Да</button>
-        <button id="confirm-no">Нет</button>
-    </div>
-
-
-
-
-
-
-    <script>
-        // Массив вопросов (вместо файла вопросы.txt)
-        const questions = [
-"Звонили ли тебе мошенники? Расскажи эту историю",
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        // Основной компонент приложения
+        function App() {
+            // Исходные категории
+            const categories = [
+                {name: 'Простые', texts: [
+                    "Звонили ли тебе мошенники? Расскажи эту историю",
 "Что тебя заводит и нравится в противоположном поле?",
 "Как выглядит идеальная вторая половинка для тебя?",
 "В тебя был кто-то тайно влюблен?",
@@ -497,83 +467,362 @@
 "Какие ошибки стоили тебе денег?",
 "Расскажи твою какую-нибудь крутую фантазию из детства",
 "Как ты относишься к чайлдфри?"
-];
-
-
-
-
-
-
-        // Копия массива для хранения оставшихся вопросов
-        let remainingQuestions = [...questions];
-
-        // Переменные для DOM элементов
-        const previousQuestionElement = document.getElementById('previous-question');
-        const currentQuestionElement = document.getElementById('current-question');
-        const questionButton = document.getElementById('question-button');
-        const resetButton = document.getElementById('reset-button');
-        const confirmationDiv = document.getElementById('confirmation');
-        const confirmYesButton = document.getElementById('confirm-yes');
-        const confirmNoButton = document.getElementById('confirm-no');
-
-        // Переменная для хранения предыдущего вопроса
-        let previousQuestion = '';
-
-        // Функция для получения случайного вопроса
-        function getRandomQuestion() {
-            const randomIndex = Math.floor(Math.random() * remainingQuestions.length);
-            return remainingQuestions.splice(randomIndex, 1)[0];  // Удаляем и возвращаем вопрос
-        }
-
-        // Обработчик нажатия на кнопку "Вопрос"
-        questionButton.addEventListener('click', () => {
-            if (remainingQuestions.length > 0) {
-                const newQuestion = getRandomQuestion();
-
-                // Обновляем предыдущий вопрос
-                previousQuestionElement.textContent = previousQuestion;
-
-                // Обновляем текущий вопрос
-                currentQuestionElement.textContent = newQuestion;
-
-                // Сохраняем текущий вопрос как предыдущий для следующего раза
-                previousQuestion = newQuestion;
-
-                // Если вопросов больше не осталось, делаем кнопку неактивной
-                if (remainingQuestions.length === 0) {
-                    questionButton.disabled = true;
+                ]},
+                {name: 'Hot', texts: [
+                    "Что тебя раздражает в порно?",
+            "Твои любимые позы в сексе? Почему они?",
+            "Сняться ли тебе эротические сны? Какой сон помнишь?",
+            "Если бы ты был порно режиссёром, какой сценарий ты бы заснял?",
+            "Сколько раз в неделю должен быть секс? Почему?",
+            "Какие прикольные названия половых органов ты знаешь?",
+            "В каких необычных местах у тебя был секс?",
+            "Посещали ли тебя когда-нибудь мысли заняться вебкамом?",
+            "Каким было первое порно, которое ты увидел / посмотрел?",
+            "Как часто нужно мастурбировать и нужно ли?",
+            "Какие сексуальные игры в постели ты знаешь?",
+            "Заставали ли тебя за мастурбацией?",
+            "Ты когда-нибудь занимался сексом с несколькими партнёрами менее чем за 48 часов?",
+            "Был ли секс с бывшим(бывшей)?",
+            "Что в сексе ты взял от прошлого партнёра в плане опыта?",
+            "Проституция для общества - это хорошо или плохо с твоей точки зрения?",
+            "Совпало ли у тебя ожидание и реальность в первом сексе?",
+            "Как давно ты показывал(а) кому-нибудь грудь?",
+            "Какой у тебя был самый лучший секс? Опиши его.",
+            "Ты когда-нибудь мастурбировал во время созвона с партнёром? Как ты к этому пришёл?",
+            "У тебя был секс с девственницей/девственником? Как это было?",
+            "Что должно произойти такого, чтобы ты стал(а) геем/лесбиянкой?",
+            "Как ты отреагируешь, если застанешь своего партнёра за просмотром порно?",
+            "Расскажи о первой девушке/парне, которая(ый) вызвал(а) у тебя желание заняться сексом",
+            "Сколько см должно быть у парня? / Какая грудь должна быть у девушки?",
+            "Если бы у тебя была возможность что-либо изменить в сексуальной жизни, что бы это было?",
+            "Ты когда-нибудь жалел(а) о том, что переспал(а) с каким-то конкретным человеком? Если да, то почему?",
+            "В какой момент ты понял, что ты опытен в сексе?",
+            "Где ты первый раз увидел порно? Каким оно было?",
+            "Как часто ты меняешь половых партнёров? Почему так?",
+            "В каком возрасте был первый секс? Как прошло?",
+            "Хотел ли бы ты себе интимный пирсинг?",
+            "Было так, что достал телефон в публичном месте, а там открывалось порно?",
+            "Сколько длился твой самый длинный половой акт? А самый короткий?",
+            "Тебе нравится подглядывать за обнажёнными людьми?",
+            "Спишь ли ты обнажённым / обнажённой?",
+            "Бывают ли у тебя желания переспать с незнакомкой / незнакомцем?",
+            "Есть ли у тебя мечта реализовать секс втроём?",
+            "Ты пользуешься смазкой (лубрикантами)?",
+            "Сколько у тебя было половых партнёров?",
+            "Используешь ли ты в сексе игрушки, наручники?",
+            "Платил ли ты когда-нибудь за порно?",
+            "Платил ли ты когда-нибудь за секс? А платили ли тебе или предлагали?",
+            "Как соблазнить противоположный пол?",
+            "Расскажи про свой первый секс. Как это было?",
+            "Снимал ли с бывшим(ей) порно?",
+            "Фоткался ли полностью голым?",
+            "Был ли ты на интимном массаже?",
+            "Снимал ли ты проститутку себе или другу? Как это было?",
+            "Было ли такое, что ты забывал надеть трусы?"
+                ]}
+            ];
+            
+            // Состояния приложения
+            const [currentCategory, setCurrentCategory] = React.useState(null);
+            const [currentText, setCurrentText] = React.useState('');
+            const [previousText, setPreviousText] = React.useState('');
+            const [history, setHistory] = React.useState([]);
+            const [favorites, setFavorites] = React.useState([]);
+            const [textHistory, setTextHistory] = React.useState([]);
+            const [categoryStates, setCategoryStates] = React.useState({});
+            
+            // Загрузка данных из localStorage при загрузке
+            React.useEffect(() => {
+                const savedHistory = localStorage.getItem('history');
+                const savedFavorites = localStorage.getItem('favorites');
+                const savedStates = localStorage.getItem('state');
+                
+                if (savedHistory) {
+                    const parsed = JSON.parse(savedHistory);
+                    setHistory(parsed);
+                    setTextHistory(parsed.map(item => {
+                        const [category, text] = item.split(':', 2);
+                        return {category, text};
+                    }));
                 }
+                if (savedFavorites) setFavorites(JSON.parse(savedFavorites));
+                if (savedStates) setCategoryStates(JSON.parse(savedStates));
+            }, []);
+            
+            // Сохранение состояния категории
+            const saveCategoryState = (categoryName, current, previous) => {
+                const newStates = {
+                    ...categoryStates,
+                    [categoryName]: { current, previous }
+                };
+                setCategoryStates(newStates);
+                localStorage.setItem('state', JSON.stringify(newStates));
+            };
+            
+            // Обработчик выбора категории
+            const handleCategorySelect = (category) => {
+                if (category === 'Избранное' || category === 'Просмотренные') {
+                    setCurrentCategory(category);
+                    setCurrentText('');
+                    setPreviousText('');
+                    return;
+                }
+                
+                const selectedCat = categories.find(c => c.name === category);
+                if (!selectedCat) return;
+                
+                setCurrentCategory(selectedCat);
+                
+                // Проверяем сохраненное состояние для категории
+                const savedState = categoryStates[category];
+                
+                if (savedState) {
+                    // Восстанавливаем из сохраненного состояния
+                    setCurrentText(savedState.current);
+                    setPreviousText(savedState.previous);
+                } else {
+                    // Генерируем новый текст для категории
+                    const newText = generateRandomText(selectedCat, history);
+                    setCurrentText(newText);
+                    setPreviousText('');
+                    // Сохраняем состояние
+                    saveCategoryState(category, newText, '');
+                }
+            };
+            
+            // Генерация случайного текста
+            const generateRandomText = (category, currentHistory) => {
+                const availableTexts = category.texts.filter(
+                    text => !currentHistory.includes(`${category.name}:${text}`)
+                );
+                
+                if (availableTexts.length === 0) {
+                    return 'Все тексты в этой категории просмотрены!';
+                }
+                
+                const randomIndex = Math.floor(Math.random() * availableTexts.length);
+                return availableTexts[randomIndex];
+            };
+            
+            // Обработчик кнопки "Далее"
+            const handleNext = () => {
+                if (!currentCategory || typeof currentCategory === 'string') return;
+                
+                // Сохраняем текущий текст как предыдущий
+                const newPrevious = currentText;
+                setPreviousText(newPrevious);
+                
+                // Добавляем текущий текст в историю
+                const textId = `${currentCategory.name}:${currentText}`;
+                const newHistory = [...history, textId];
+                
+                // Обновляем историю
+                setHistory(newHistory);
+                localStorage.setItem('history', JSON.stringify(newHistory));
+                
+                // Обновляем массив для отображения истории
+                setTextHistory([...textHistory, {
+                    category: currentCategory.name,
+                    text: currentText
+                }]);
+                
+                // Генерируем и показываем новый текст
+                const newText = generateRandomText(currentCategory, newHistory);
+                setCurrentText(newText);
+                
+                // Сохраняем состояние категории
+                saveCategoryState(currentCategory.name, newText, newPrevious);
+            };
+            
+            // Обработчик кнопки "Добавить в избранное"
+            const handleAddToFavorites = () => {
+                if (!currentText || !currentCategory || typeof currentCategory === 'string') return;
+                
+                const textId = `${currentCategory.name}:${currentText}`;
+                if (favorites.includes(textId)) {
+                    alert('Этот текст уже в избранном!');
+                    return;
+                }
+                
+                const newFavorites = [...favorites, textId];
+                setFavorites(newFavorites);
+                localStorage.setItem('favorites', JSON.stringify(newFavorites));
+                
+                alert('Текст добавлен в избранное!');
+            };
+            
+            // Возврат к выбору категории
+            const handleBack = () => {
+                setCurrentCategory(null);
+                setCurrentText('');
+                setPreviousText('');
+            };
+            
+            // Проверка на новые тексты в категории
+            const getAvailableCount = (category) => {
+                const savedState = categoryStates[category.name];
+                const savedText = savedState ? savedState.current : '';
+                
+                return category.texts.filter(
+                    text => !history.includes(`${category.name}:${text}`) && text !== savedText
+                ).length;
+            };
+            
+            // Рендер главной страницы
+            if (!currentCategory) {
+                return (
+                    <div className="card p-4">
+                        <h2 className="text-center mb-4">Выберите категорию</h2>
+                        <div className="d-grid gap-3">
+                            {categories.map(category => {
+                                const availableCount = getAvailableCount(category);
+                                return (
+                                    <button 
+                                        key={category.name}
+                                        className="btn btn-primary btn-lg position-relative btn-category"
+                                        onClick={() => handleCategorySelect(category.name)}
+                                    >
+                                        {category.name}
+                                        {availableCount > 0 && (
+                                            <span className="badge bg-danger rounded-pill">
+                                                {availableCount}
+                                            </span>
+                                        )}
+                                    </button>
+                                );
+                            })}
+                            <button 
+                                className="btn btn-success btn-lg"
+                                onClick={() => handleCategorySelect('Избранное')}
+                            >
+                                Избранное
+                                {favorites.length > 0 && (
+                                    <span className="badge bg-danger ms-2">
+                                        {favorites.length}
+                                    </span>
+                                )}
+                            </button>
+                            <button 
+                                className="btn btn-info btn-lg"
+                                onClick={() => handleCategorySelect('Просмотренные')}
+                            >
+                                Просмотренные
+                                {textHistory.length > 0 && (
+                                    <span className="badge bg-danger ms-2">
+                                        {textHistory.length}
+                                    </span>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                );
             }
-        });
-
-        // Обработчик нажатия на кнопку "Сброс"
-        resetButton.addEventListener('click', () => {
-            // Показываем сообщение подтверждения
-            confirmationDiv.style.display = 'block';
-        });
-
-        // Обработчик нажатия на кнопку "Да"
-        confirmYesButton.addEventListener('click', () => {
-            // Восстанавливаем все вопросы
-            remainingQuestions = [...questions];
-            previousQuestion = '';
-
-            // Сбрасываем текстовые поля
-            previousQuestionElement.textContent = 'Здесь будет отображаться предыдущий вопрос';
-            currentQuestionElement.textContent = 'Нажмите кнопку, чтобы получить вопрос';
-
-            // Активируем кнопку "Вопрос"
-            questionButton.disabled = false;
-
-            // Скрываем сообщение подтверждения
-            confirmationDiv.style.display = 'none';
-        });
-
-        // Обработчик нажатия на кнопку "Нет"
-        confirmNoButton.addEventListener('click', () => {
-            // Скрываем сообщение подтверждения
-            confirmationDiv.style.display = 'none';
-        });
+            
+            // Рендер избранного
+            if (currentCategory === 'Избранное') {
+                return (
+                    <div className="card p-4">
+                        <div className="d-flex justify-content-between align-items-center mb-4">
+                            <h2>Избранное</h2>
+                            <button className="btn btn-secondary" onClick={handleBack}>
+                                Назад
+                            </button>
+                        </div>
+                        
+                        {favorites.length === 0 ? (
+                            <p className="text-center">В избранном пока ничего нет</p>
+                        ) : (
+                            <div className="list-group">
+                                {favorites.map((fav, index) => {
+                                    const [category, text] = fav.split(':', 2);
+                                    return (
+                                        <div key={index} className="list-group-item favorite-item">
+                                            <div className="history-title">{category}</div>
+                                            <div>{text}</div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+            
+            // Рендер просмотренных текстов
+            if (currentCategory === 'Просмотренные') {
+                return (
+                    <div className="card p-4">
+                        <div className="d-flex justify-content-between align-items-center mb-4">
+                            <h2>Просмотренные тексты</h2>
+                            <button className="btn btn-secondary" onClick={handleBack}>
+                                Назад
+                            </button>
+                        </div>
+                        
+                        {textHistory.length === 0 ? (
+                            <p className="text-center">Вы еще не просмотрели ни одного текста</p>
+                        ) : (
+                            <div className="list-group">
+                                {textHistory.map((item, index) => (
+                                    <div key={index} className="list-group-item history-item">
+                                        <div className="history-title">{item.category}</div>
+                                        <div>{item.text}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+            
+            // Рендер выбранной категории
+            return (
+                <div className="card p-4">
+                    <div className="d-flex justify-content-between align-items-center mb-4">
+                        <h2>{currentCategory.name}</h2>
+                        <button className="btn btn-secondary" onClick={handleBack}>
+                            Назад
+                        </button>
+                    </div>
+                    
+                    <div className="card">
+                        <div className="card-body text-display">
+                            <div className="current-text">
+                                {currentText || 'Загрузка...'}
+                            </div>
+                            
+                            {previousText && (
+                                <div className="previous-text">
+                                    <div><em>Предыдущий текст:</em></div>
+                                    <div>{previousText}</div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    
+                    <div className="btn-container">
+                        <button 
+                            className="btn btn-primary btn-lg" 
+                            onClick={handleNext}
+                            disabled={currentText === 'Все тексты в этой категории просмотрены!'}
+                        >
+                            Далее
+                        </button>
+                        <button 
+                            className="btn btn-success btn-lg" 
+                            onClick={handleAddToFavorites}
+                            disabled={!currentText || currentText === 'Все тексты в этой категории просмотрены!'}
+                        >
+                            Добавить в избранное
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+        
+        // Рендерим приложение
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
 </html>
